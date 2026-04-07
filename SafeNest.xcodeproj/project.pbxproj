@@ -6,8 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		657CEDC92F853C16007E0ED4 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 657CEDC72F853C0F007E0ED4 /* .gitignore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		657CED802F8490FD007E0ED4 /* SafeNest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SafeNest.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		657CEDC72F853C0F007E0ED4 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -34,6 +39,7 @@
 			children = (
 				657CED822F8490FD007E0ED4 /* SafeNest */,
 				657CED812F8490FD007E0ED4 /* Products */,
+				657CEDC72F853C0F007E0ED4 /* .gitignore */,
 			);
 			sourceTree = "<group>";
 		};
@@ -109,6 +115,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				657CEDC92F853C16007E0ED4 /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
