@@ -1,15 +1,14 @@
 import SwiftUI
 
 struct ChildDeviceView: View {
-    @State private var vm = ChildDeviceViewModel()
+    @Environment(AppState.self) private var appState
+
+    private var vm: ChildDeviceViewModel { ChildDeviceViewModel(store: appState) }
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Device Info Card
                 deviceInfoCard
-
-                // Recent Events
                 recentEventsSection
             }
             .padding(.horizontal)
@@ -23,7 +22,7 @@ struct ChildDeviceView: View {
 
     private var deviceInfoCard: some View {
         VStack(spacing: 16) {
-            HStack {
+            HStack(spacing: 12) {
                 Image(systemName: "iphone")
                     .font(.largeTitle)
                     .foregroundStyle(.blue)
@@ -43,7 +42,7 @@ struct ChildDeviceView: View {
                 Label("保護狀態", systemImage: "shield.fill")
                     .font(.subheadline)
                 Spacer()
-                HStack(spacing: 4) {
+                HStack(spacing: 5) {
                     Circle()
                         .fill(vm.child.protectionEnabled ? Color.green : Color.red)
                         .frame(width: 8, height: 8)
@@ -67,7 +66,7 @@ struct ChildDeviceView: View {
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
     }
 
-    // MARK: - Recent Events Section
+    // MARK: - Recent Events
 
     private var recentEventsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -98,5 +97,6 @@ struct ChildDeviceView: View {
 #Preview {
     NavigationStack {
         ChildDeviceView()
+            .environment(AppState())
     }
 }

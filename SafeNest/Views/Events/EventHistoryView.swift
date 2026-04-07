@@ -1,20 +1,29 @@
 import SwiftUI
 
 struct EventHistoryView: View {
-    @State private var vm = EventHistoryViewModel()
+    @Environment(AppState.self) private var appState
+
+    // nil = 全部；有值 = 指定類別
+    @State private var selectedCategory: BlockEventCategory? = nil
+
+    private var vm: EventHistoryViewModel { EventHistoryViewModel(store: appState) }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Category Filter
+
+                // 類別篩選器
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(vm.availableCategories, id: \.self) { cat in
+                        FilterChip(title: "全部", isSelected: selectedCategory == nil) {
+                            selectedCategory = nil
+                        }
+                        ForEach(vm.availableCategories) { cat in
                             FilterChip(
-                                title: cat,
-                                isSelected: vm.selectedCategory == cat
+                                title: cat.displayName,
+                                isSelected: selectedCategory == cat
                             ) {
-                                vm.selectedCategory = cat
+                                selectedCategory = cat
                             }
                         }
                     }
@@ -24,19 +33,24 @@ struct EventHistoryView: View {
 
                 Divider()
 
-                // Events List
-                if vm.filteredEvents.isEmpty {
+                let filtered = vm.filteredEvents(category: selectedCategory)
+
+                if filtered.isEmpty {
                     ContentUnavailableView(
                         "沒有符合的紀錄",
                         systemImage: "clock.badge.checkmark",
-                        description: Text("目前沒有 \(vm.selectedCategory) 的阻擋紀錄")
+                        description: Text(
+                            selectedCategory != nil
+                                ? "目前沒有「\(selectedCategory!.displayName)」的阻擋紀錄"
+                                : "目前沒有阻擋紀錄"
+                        )
                     )
                 } else {
-                    List(vm.filteredEvents) { event in
+                    List(filtered) { event in
                         EventHistoryRow(event: event)
                     }
                     .listStyle(.plain)
-                    .animation(.default, value: vm.selectedCategory)
+                    .animation(.default, value: selectedCategory)
                 }
             }
             .navigationTitle("阻擋紀錄")
@@ -78,18 +92,18 @@ struct EventHistoryRow: View {
         .padding(.vertical, 4)
     }
 
-    private func categoryTag(_ text: String) -> some View {
-        Text(text)
+    private func categoryTag(_ cat: BlockEventCategory) -> some View {
+        Label(cat.displayName, systemImage: cat.icon)
             .font(.caption2)
             .fontWeight(.medium)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(Color.red.opacity(0.1), in: Capsule())
-            .foregroundStyle(.red)
+            .background(cat.color.opacity(0.1), in: Capsule())
+            .foregroundStyle(cat.color)
     }
 
-    private func ruleTypeTag(_ text: String) -> some View {
-        Text(text)
+    private func ruleTypeTag(_ type: RuleType) -> some View {
+        Text(type.displayName)
             .font(.caption2)
             .fontWeight(.medium)
             .padding(.horizontal, 8)
@@ -125,4 +139,5 @@ struct FilterChip: View {
 
 #Preview {
     EventHistoryView()
+        .environment(AppState())
 }

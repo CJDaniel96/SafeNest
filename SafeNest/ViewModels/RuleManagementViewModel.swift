@@ -1,45 +1,37 @@
 import Foundation
 
-@Observable
-final class RuleManagementViewModel {
-    private(set) var rules: [Rule]
-    var selectedTab: RuleType = .blacklist
+/// 規則管理的顯示邏輯與操作代理。
+/// UI 狀態（selectedTab、showAddSheet）維持在 View 層的 @State，
+/// 此 struct 只負責計算與把操作轉發給 AppState。
+struct RuleManagementViewModel {
+    private let store: AppState
 
-    init(rules: [Rule] = MockData.rules) {
-        self.rules = rules
+    init(store: AppState) {
+        self.store = store
     }
 
-    var filteredRules: [Rule] {
-        rules.filter { $0.ruleType == selectedTab }
+    // MARK: - Computed Properties
+
+    func filteredRules(for tab: RuleType) -> [Rule] {
+        store.rules.filter { $0.type == tab }
     }
 
-    // MARK: - Actions
+    // MARK: - Actions（委派給 AppState）
 
-    func toggleEnabled(_ rule: Rule) {
-        guard let idx = rules.firstIndex(where: { $0.id == rule.id }) else { return }
-        rules[idx].enabled.toggle()
+    func toggle(_ rule: Rule) {
+        store.toggleRule(rule)
     }
 
     func delete(_ rule: Rule) {
-        rules.removeAll { $0.id == rule.id }
+        store.deleteRule(rule)
     }
 
-    func deleteByOffsets(_ offsets: IndexSet) {
-        let filtered = filteredRules
-        let idsToDelete = offsets.map { filtered[$0].id }
-        rules.removeAll { idsToDelete.contains($0.id) }
+    func deleteByOffsets(_ offsets: IndexSet, tab: RuleType) {
+        let filtered = filteredRules(for: tab)
+        store.deleteRules(at: offsets, from: filtered)
     }
 
     func addRule(type: RuleType, value: String) {
-        guard !value.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        let newRule = Rule(
-            id: UUID().uuidString,
-            childProfileId: MockData.childProfile.id,
-            type: type.rawValue,
-            value: value.trimmingCharacters(in: .whitespaces),
-            enabled: true,
-            createdAt: Date()
-        )
-        rules.append(newRule)
+        store.addRule(type: type, value: value)
     }
 }

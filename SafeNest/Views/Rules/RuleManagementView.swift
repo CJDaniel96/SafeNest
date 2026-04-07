@@ -1,48 +1,52 @@
 import SwiftUI
 
 struct RuleManagementView: View {
-    @State private var vm = RuleManagementViewModel()
+    @Environment(AppState.self) private var appState
+
+    // UI 狀態維持在 View 層
+    @State private var selectedTab: RuleType = .blacklist
     @State private var showAddSheet = false
+
+    private var vm: RuleManagementViewModel { RuleManagementViewModel(store: appState) }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Tab Picker
-                Picker("規則類型", selection: $vm.selectedTab) {
-                    ForEach(RuleType.allCases, id: \.self) { type in
+
+                // 分頁切換
+                Picker("規則類型", selection: $selectedTab) {
+                    ForEach(RuleType.allCases) { type in
                         Text(type.displayName).tag(type)
                     }
                 }
                 .pickerStyle(.segmented)
                 .padding()
 
-                // Rules List
+                // 規則列表
                 List {
-                    ForEach(vm.filteredRules) { rule in
+                    ForEach(vm.filteredRules(for: selectedTab)) { rule in
                         RuleRowView(rule: rule) {
-                            vm.toggleEnabled(rule)
+                            vm.toggle(rule)
                         }
                     }
                     .onDelete { offsets in
-                        vm.deleteByOffsets(offsets)
+                        vm.deleteByOffsets(offsets, tab: selectedTab)
                     }
                 }
                 .listStyle(.insetGrouped)
-                .animation(.default, value: vm.selectedTab)
+                .animation(.default, value: selectedTab)
             }
             .navigationTitle("規則管理")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showAddSheet = true
-                    } label: {
+                    Button { showAddSheet = true } label: {
                         Image(systemName: "plus")
                     }
                 }
             }
             .sheet(isPresented: $showAddSheet) {
-                AddRuleSheetView(selectedType: vm.selectedTab) { type, value in
+                AddRuleSheetView(selectedType: selectedTab) { type, value in
                     vm.addRule(type: type, value: value)
                 }
             }
@@ -63,7 +67,7 @@ struct RuleRowView: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(rule.enabled ? .primary : .secondary)
-                Text(rule.ruleType.displayName)
+                Text(rule.type.displayName)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -79,4 +83,5 @@ struct RuleRowView: View {
 
 #Preview {
     RuleManagementView()
+        .environment(AppState())
 }

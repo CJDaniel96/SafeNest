@@ -1,20 +1,24 @@
 import Foundation
 
-@Observable
-final class ChildDeviceViewModel {
-    private(set) var child: ChildProfile
-    private(set) var recentEvents: [BlockEvent]
+/// 孩子裝置頁的顯示邏輯。
+struct ChildDeviceViewModel {
+    private let store: AppState
 
-    init(
-        child: ChildProfile = MockData.childProfile,
-        events: [BlockEvent] = MockData.blockEvents
-    ) {
-        self.child = child
-        let sorted = events.sorted { $0.blockedAt > $1.blockedAt }
-        self.recentEvents = Array(sorted.prefix(5))
+    init(store: AppState) {
+        self.store = store
     }
 
+    // MARK: - Computed Properties
+
+    var child: ChildProfile { store.childProfile }
+
     var deviceDisplayName: String {
-        child.deviceName ?? "未知裝置"
+        store.childProfile.deviceName ?? "未知裝置"
+    }
+
+    var recentEvents: [BlockEvent] {
+        Array(store.blockEvents
+            .sorted { $0.blockedAt > $1.blockedAt }
+            .prefix(5))
     }
 }

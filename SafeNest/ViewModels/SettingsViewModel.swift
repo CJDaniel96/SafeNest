@@ -1,23 +1,23 @@
 import Foundation
 
-@Observable
-final class SettingsViewModel {
-    private(set) var parent: Parent
-    var child: ChildProfile
+/// 設定頁的顯示邏輯與操作代理。
+/// notificationsEnabled / weeklySummaryEnabled / parentalPINEnabled 等純 UI 開關
+/// 維持在 View 層的 @State（目前不影響其他頁面）。
+struct SettingsViewModel {
+    private let store: AppState
 
-    var notificationsEnabled: Bool = true
-    var weeklySummaryEnabled: Bool = true
-    var parentalPINEnabled: Bool = false
-
-    init(
-        parent: Parent = MockData.parent,
-        child: ChildProfile = MockData.childProfile
-    ) {
-        self.parent = parent
-        self.child = child
+    init(store: AppState) {
+        self.store = store
     }
 
+    // MARK: - Computed Properties
+
+    var parent: Parent       { store.parent }
+    var child: ChildProfile  { store.childProfile }
+
+    // MARK: - Actions
+
     func toggleProtection() {
-        child.protectionEnabled.toggle()
+        store.toggleProtection()
     }
 }
