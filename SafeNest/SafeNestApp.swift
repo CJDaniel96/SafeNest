@@ -22,13 +22,13 @@ struct SafeNestApp: App {
     }()
 
     init() {
-        // 第一次啟動時插入 Demo 資料（有資料則跳過）
         SeedDataService.seedIfNeeded(in: container.mainContext)
     }
 
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            // RootView 依 appState.currentRole 決定顯示家長端或兒少端
+            RootView()
                 .environment(appState)
         }
         .modelContainer(container)

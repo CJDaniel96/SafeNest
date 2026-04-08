@@ -2,10 +2,19 @@ import Foundation
 import SwiftData
 
 /// 全域狀態協調者。
-/// Round 3 起資料讀取改由各 View 的 @Query 負責（直接來自 SwiftData），
-/// AppState 專注於集中提供寫入/刪除操作，保持各 View 一致的 mutation 入口。
+/// - 資料讀取由各 View 的 @Query 負責
+/// - AppState 提供寫入/刪除操作與角色切換
 @Observable
 final class AppState {
+
+    // MARK: - Role
+
+    /// 目前的使用角色，控制 RootView 顯示家長端或兒少端
+    var currentRole: AppRole = .parent
+
+    func switchRole(to role: AppRole) {
+        currentRole = role
+    }
 
     // MARK: - Rule Mutations
 
@@ -31,7 +40,7 @@ final class AppState {
         offsets.forEach { context.delete(rules[$0]) }
     }
 
-    /// @Model 是 class（reference type），直接 mutate 即可，SwiftData 自動追蹤變更
+    /// @Model 是 class，直接 mutate 即可，SwiftData 自動追蹤
     func toggleRule(_ rule: Rule) {
         rule.enabled.toggle()
     }

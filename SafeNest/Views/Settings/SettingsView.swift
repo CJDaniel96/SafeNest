@@ -18,11 +18,30 @@ struct SettingsView: View {
         NavigationStack {
             List {
 
+                // MARK: 裝置模式（角色切換）
+                Section {
+                    Picker("目前模式", selection: Binding(
+                        get: { appState.currentRole },
+                        set: { appState.switchRole(to: $0) }
+                    )) {
+                        ForEach(AppRole.allCases, id: \.self) { role in
+                            Label(role.displayName, systemImage: role.icon).tag(role)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text("裝置模式")
+                } footer: {
+                    Text("切換到「孩子模式」後，App 將顯示兒少專用介面。")
+                }
+
+                // MARK: 家長帳號
                 Section("家長帳號") {
                     LabeledContent("姓名",    value: vm.parentName)
                     LabeledContent("電子郵件", value: vm.parentEmail)
                 }
 
+                // MARK: 受保護對象
                 Section("受保護對象") {
                     LabeledContent("孩子名稱", value: vm.childName)
                     LabeledContent("年齡群組", value: vm.childAgeGroup)
@@ -41,6 +60,7 @@ struct SettingsView: View {
                     }
                 }
 
+                // MARK: 通知
                 Section("通知") {
                     Toggle(isOn: $notificationsEnabled) {
                         Label("推播通知", systemImage: "bell.fill")
@@ -50,6 +70,7 @@ struct SettingsView: View {
                     }
                 }
 
+                // MARK: 安全性
                 Section("安全性") {
                     Toggle(isOn: $parentalPINEnabled) {
                         Label("家長 PIN 碼", systemImage: "lock.fill")
@@ -63,6 +84,7 @@ struct SettingsView: View {
                     .disabled(!parentalPINEnabled)
                 }
 
+                // MARK: 關於
                 Section("關於") {
                     LabeledContent("版本", value: "1.0.0 (MVP)")
                     Button {
