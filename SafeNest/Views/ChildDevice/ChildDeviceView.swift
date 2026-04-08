@@ -47,8 +47,7 @@ struct ChildDeviceView: View {
             Divider()
 
             HStack {
-                Label("保護狀態", systemImage: "shield.fill")
-                    .font(.subheadline)
+                Label("保護狀態", systemImage: "shield.fill").font(.subheadline)
                 Spacer()
                 HStack(spacing: 5) {
                     Circle()
@@ -62,8 +61,7 @@ struct ChildDeviceView: View {
             }
 
             HStack {
-                Label("年齡群組", systemImage: "person.fill")
-                    .font(.subheadline)
+                Label("年齡群組", systemImage: "person.fill").font(.subheadline)
                 Spacer()
                 Text(vm.ageGroup)
                     .font(.subheadline)
@@ -71,33 +69,15 @@ struct ChildDeviceView: View {
             }
         }
         .padding(20)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .cardContainer(cornerRadius: 16)
     }
 
     // MARK: - Recent Events
 
     private var recentEventsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("最近阻擋紀錄")
-                .font(.headline)
-
-            if vm.recentEvents.isEmpty {
-                ContentUnavailableView(
-                    "暫無紀錄",
-                    systemImage: "checkmark.shield",
-                    description: Text("目前沒有阻擋紀錄")
-                )
-            } else {
-                VStack(spacing: 0) {
-                    ForEach(vm.recentEvents) { event in
-                        BlockEventRow(event: event)
-                        if event.id != vm.recentEvents.last?.id {
-                            Divider().padding(.leading, 16)
-                        }
-                    }
-                }
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-            }
+            SectionHeader(title: "最近阻擋紀錄")
+            BlockEventList(events: vm.recentEvents)
         }
     }
 }

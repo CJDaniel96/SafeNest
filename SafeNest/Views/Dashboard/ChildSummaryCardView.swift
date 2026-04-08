@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Dashboard 頂部的孩子摘要卡片，顯示今日 / 本週阻擋統計與保護狀態。
 struct ChildSummaryCardView: View {
     let child: ChildProfile
     let todayBlocked: Int
@@ -7,7 +8,8 @@ struct ChildSummaryCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Header
+
+            // 孩子名稱與保護狀態徽章
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
@@ -26,10 +28,9 @@ struct ChildSummaryCardView: View {
                 protectionBadge
             }
 
-            Divider()
-                .overlay(Color.white.opacity(0.3))
+            Divider().overlay(Color.white.opacity(0.3))
 
-            // Stats
+            // 統計數字
             HStack(spacing: 0) {
                 statItem(label: "今日阻擋", value: "\(todayBlocked)")
                 Spacer()
@@ -38,6 +39,7 @@ struct ChildSummaryCardView: View {
                 statItem(label: "裝置", value: child.deviceName != nil ? "已連接" : "未連接")
             }
 
+            // 裝置名稱 + 進入提示
             HStack(spacing: 4) {
                 Text(child.deviceName ?? "尚未設定裝置")
                     .font(.caption)
@@ -60,6 +62,8 @@ struct ChildSummaryCardView: View {
         .shadow(color: .blue.opacity(0.3), radius: 8, y: 4)
     }
 
+    // MARK: - Private
+
     private var protectionBadge: some View {
         HStack(spacing: 4) {
             Image(systemName: child.protectionEnabled ? "checkmark.shield.fill" : "shield.slash.fill")
@@ -71,9 +75,7 @@ struct ChildSummaryCardView: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
         .background(
-            child.protectionEnabled
-                ? Color.green.opacity(0.35)
-                : Color.red.opacity(0.35),
+            child.protectionEnabled ? Color.green.opacity(0.35) : Color.red.opacity(0.35),
             in: Capsule()
         )
     }
@@ -92,10 +94,13 @@ struct ChildSummaryCardView: View {
 }
 
 #Preview {
-    ChildSummaryCardView(
-        child: MockData.childProfile,
-        todayBlocked: 4,
-        weeklyBlocked: 10
+    let child = ChildProfile(
+        parentId: "p-001",
+        name: "小安",
+        ageGroup: "6–12 歲",
+        deviceName: "小安的 iPhone",
+        protectionEnabled: true
     )
-    .padding()
+    return ChildSummaryCardView(child: child, todayBlocked: 4, weeklyBlocked: 10)
+        .padding()
 }

@@ -12,50 +12,56 @@ struct EventHistoryView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-
-                // 類別篩選器
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        FilterChip(title: "全部", isSelected: selectedCategory == nil) {
-                            selectedCategory = nil
-                        }
-                        ForEach(vm.availableCategories) { cat in
-                            FilterChip(
-                                title: cat.displayName,
-                                isSelected: selectedCategory == cat
-                            ) {
-                                selectedCategory = cat
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-                    .padding(.vertical, 10)
-                }
-
+                categoryFilterBar
                 Divider()
-
-                let filtered = vm.filteredEvents(category: selectedCategory)
-
-                if filtered.isEmpty {
-                    ContentUnavailableView(
-                        "沒有符合的紀錄",
-                        systemImage: "clock.badge.checkmark",
-                        description: Text(
-                            selectedCategory != nil
-                                ? "目前沒有「\(selectedCategory!.displayName)」的阻擋紀錄"
-                                : "目前沒有阻擋紀錄"
-                        )
-                    )
-                } else {
-                    List(filtered) { event in
-                        EventHistoryRow(event: event)
-                    }
-                    .listStyle(.plain)
-                    .animation(.default, value: selectedCategory)
-                }
+                eventList
             }
             .navigationTitle("阻擋紀錄")
             .navigationBarTitleDisplayMode(.large)
+        }
+    }
+
+    // MARK: - Subviews
+
+    private var categoryFilterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                FilterChip(title: "全部", isSelected: selectedCategory == nil) {
+                    selectedCategory = nil
+                }
+                ForEach(vm.availableCategories) { cat in
+                    FilterChip(
+                        title: cat.displayName,
+                        isSelected: selectedCategory == cat
+                    ) {
+                        selectedCategory = cat
+                    }
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+        }
+    }
+
+    @ViewBuilder
+    private var eventList: some View {
+        let filtered = vm.filteredEvents(category: selectedCategory)
+        if filtered.isEmpty {
+            ContentUnavailableView(
+                "沒有符合的紀錄",
+                systemImage: "clock.badge.checkmark",
+                description: Text(
+                    selectedCategory != nil
+                        ? "目前沒有「\(selectedCategory!.displayName)」的阻擋紀錄"
+                        : "目前沒有阻擋紀錄"
+                )
+            )
+        } else {
+            List(filtered) { event in
+                EventHistoryRow(event: event)
+            }
+            .listStyle(.plain)
+            .animation(.default, value: selectedCategory)
         }
     }
 }
@@ -79,8 +85,8 @@ struct EventHistoryRow: View {
             }
 
             HStack(spacing: 8) {
-                categoryTag(event.category)
-                ruleTypeTag(event.matchedRuleType)
+                CategoryTagView(category: event.category)
+                RuleTypeTagView(ruleType: event.matchedRuleType)
             }
 
             if let url = event.url {
@@ -91,50 +97,6 @@ struct EventHistoryRow: View {
             }
         }
         .padding(.vertical, 4)
-    }
-
-    private func categoryTag(_ cat: BlockEventCategory) -> some View {
-        Label(cat.displayName, systemImage: cat.icon)
-            .font(.caption2)
-            .fontWeight(.medium)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(cat.color.opacity(0.1), in: Capsule())
-            .foregroundStyle(cat.color)
-    }
-
-    private func ruleTypeTag(_ type: RuleType) -> some View {
-        Text(type.displayName)
-            .font(.caption2)
-            .fontWeight(.medium)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(Color.blue.opacity(0.1), in: Capsule())
-            .foregroundStyle(.blue)
-    }
-}
-
-// MARK: - FilterChip
-
-struct FilterChip: View {
-    let title: String
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.subheadline)
-                .fontWeight(isSelected ? .semibold : .regular)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .background(
-                    isSelected ? Color.blue : Color.secondary.opacity(0.12),
-                    in: Capsule()
-                )
-                .foregroundStyle(isSelected ? .white : .primary)
-        }
-        .buttonStyle(.plain)
     }
 }
 
