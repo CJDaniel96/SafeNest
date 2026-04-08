@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 /// 單筆阻擋事件的行元件，用於 Dashboard 與 ChildDeviceView。
 struct BlockEventRow: View {
