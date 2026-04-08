@@ -1,68 +1,44 @@
 import Foundation
+import SwiftData
 
-/// 全域狀態中心。
-/// 所有頁面透過 SwiftUI Environment 共享同一個實例，
-/// 任何資料變動都在此集中處理，確保各 View 自動同步更新。
+/// 全域狀態協調者。
+/// Round 3 起資料讀取改由各 View 的 @Query 負責（直接來自 SwiftData），
+/// AppState 專注於集中提供寫入/刪除操作，保持各 View 一致的 mutation 入口。
 @Observable
 final class AppState {
 
-    // MARK: - Shared Data
-
-    var parent: Parent
-    var childProfile: ChildProfile
-    var rules: [Rule]
-    var blockEvents: [BlockEvent]
-    var weeklySummary: WeeklySummary
-
-    // MARK: - Init
-
-    init(
-        parent: Parent           = MockData.parent,
-        childProfile: ChildProfile = MockData.childProfile,
-        rules: [Rule]            = MockData.rules,
-        blockEvents: [BlockEvent]  = MockData.blockEvents,
-        weeklySummary: WeeklySummary = MockData.weeklySummary
-    ) {
-        self.parent        = parent
-        self.childProfile  = childProfile
-        self.rules         = rules
-        self.blockEvents   = blockEvents
-        self.weeklySummary = weeklySummary
-    }
-
     // MARK: - Rule Mutations
 
-    func addRule(type: RuleType, value: String) {
+    func addRule(type: RuleType, value: String,
+                 childProfileId: String,
+                 in context: ModelContext) {
         let trimmed = value.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
-        rules.append(Rule(
-            id: UUID().uuidString,
-            childProfileId: childProfile.id,
+        context.insert(Rule(
+            childProfileId: childProfileId,
             type: type,
-            value: trimmed,
-            enabled: true,
-            createdAt: Date()
+            value: trimmed
         ))
     }
 
-    func deleteRule(_ rule: Rule) {
-        rules.removeAll { $0.id == rule.id }
+    func deleteRule(_ rule: Rule, in context: ModelContext) {
+        context.delete(rule)
     }
 
-    /// 由 List onDelete 使用，傳入已篩選後的子陣列偏移
-    func deleteRules(at offsets: IndexSet, from filtered: [Rule]) {
-        let ids = offsets.map { filtered[$0].id }
-        rules.removeAll { ids.contains($0.id) }
+    func deleteRules(at offsets: IndexSet,
+                     from rules: [Rule],
+                     in context: ModelContext) {
+        offsets.forEach { context.delete(rules[$0]) }
     }
 
+    /// @Model 是 class（reference type），直接 mutate 即可，SwiftData 自動追蹤變更
     func toggleRule(_ rule: Rule) {
-        guard let idx = rules.firstIndex(where: { $0.id == rule.id }) else { return }
-        rules[idx].enabled.toggle()
+        rule.enabled.toggle()
     }
 
     // MARK: - Child Mutations
 
-    func toggleProtection() {
-        childProfile.protectionEnabled.toggle()
+    func toggleProtection(_ child: ChildProfile) {
+        child.protectionEnabled.toggle()
     }
 }

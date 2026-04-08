@@ -1,12 +1,13 @@
 import SwiftUI
+import SwiftData
 
 struct EventHistoryView: View {
+    @Query(sort: \BlockEvent.blockedAt, order: .reverse) private var blockEvents: [BlockEvent]
     @Environment(AppState.self) private var appState
 
-    // nil = 全部；有值 = 指定類別
     @State private var selectedCategory: BlockEventCategory? = nil
 
-    private var vm: EventHistoryViewModel { EventHistoryViewModel(store: appState) }
+    private var vm: EventHistoryViewModel { EventHistoryViewModel(events: blockEvents) }
 
     var body: some View {
         NavigationStack {
@@ -139,5 +140,6 @@ struct FilterChip: View {
 
 #Preview {
     EventHistoryView()
+        .modelContainer(PreviewContainer.shared)
         .environment(AppState())
 }

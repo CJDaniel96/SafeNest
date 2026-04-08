@@ -1,9 +1,17 @@
 import SwiftUI
+import SwiftData
 
 struct ChildDeviceView: View {
+    @Query(sort: \BlockEvent.blockedAt, order: .reverse) private var blockEvents: [BlockEvent]
+    @Query private var childProfiles: [ChildProfile]
     @Environment(AppState.self) private var appState
 
-    private var vm: ChildDeviceViewModel { ChildDeviceViewModel(store: appState) }
+    private var vm: ChildDeviceViewModel {
+        ChildDeviceViewModel(
+            child: childProfiles.first,
+            recentEvents: Array(blockEvents.prefix(5))
+        )
+    }
 
     var body: some View {
         ScrollView {
@@ -14,7 +22,7 @@ struct ChildDeviceView: View {
             .padding(.horizontal)
             .padding(.bottom, 24)
         }
-        .navigationTitle(vm.child.name)
+        .navigationTitle(vm.childName)
         .navigationBarTitleDisplayMode(.large)
     }
 
@@ -29,7 +37,7 @@ struct ChildDeviceView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(vm.deviceDisplayName)
                         .font(.headline)
-                    Text(vm.child.ageGroup)
+                    Text(vm.ageGroup)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -44,12 +52,12 @@ struct ChildDeviceView: View {
                 Spacer()
                 HStack(spacing: 5) {
                     Circle()
-                        .fill(vm.child.protectionEnabled ? Color.green : Color.red)
+                        .fill(vm.protectionEnabled ? Color.green : Color.red)
                         .frame(width: 8, height: 8)
-                    Text(vm.child.protectionEnabled ? "已啟用" : "已停用")
+                    Text(vm.protectionEnabled ? "已啟用" : "已停用")
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundStyle(vm.child.protectionEnabled ? .green : .red)
+                        .foregroundStyle(vm.protectionEnabled ? .green : .red)
                 }
             }
 
@@ -57,7 +65,7 @@ struct ChildDeviceView: View {
                 Label("年齡群組", systemImage: "person.fill")
                     .font(.subheadline)
                 Spacer()
-                Text(vm.child.ageGroup)
+                Text(vm.ageGroup)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -97,6 +105,7 @@ struct ChildDeviceView: View {
 #Preview {
     NavigationStack {
         ChildDeviceView()
+            .modelContainer(PreviewContainer.shared)
             .environment(AppState())
     }
 }

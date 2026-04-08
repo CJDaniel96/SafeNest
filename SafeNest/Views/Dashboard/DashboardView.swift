@@ -1,12 +1,16 @@
 import SwiftUI
+import SwiftData
 
 struct DashboardView: View {
+    // SwiftData 即時查詢
+    @Query(sort: \BlockEvent.blockedAt, order: .reverse) private var blockEvents: [BlockEvent]
+    @Query private var childProfiles: [ChildProfile]
+
     @Environment(AppState.self) private var appState
 
-    /// ViewModel 以計算屬性方式建立：
-    /// 因為 AppState 是 @Observable，SwiftUI 在 body 執行時
-    /// 會追蹤所有 appState 屬性的讀取，變動時自動重新渲染。
-    private var vm: DashboardViewModel { DashboardViewModel(store: appState) }
+    private var vm: DashboardViewModel {
+        DashboardViewModel(child: childProfiles.first, blockEvents: blockEvents)
+    }
 
     var body: some View {
         NavigationStack {
@@ -14,14 +18,16 @@ struct DashboardView: View {
                 VStack(spacing: 20) {
 
                     // Child Summary Card → 點進 ChildDeviceView
-                    NavigationLink(destination: ChildDeviceView()) {
-                        ChildSummaryCardView(
-                            child: vm.child,
-                            todayBlocked: vm.todayBlockedCount,
-                            weeklyBlocked: vm.weeklyBlockedCount
-                        )
+                    if let child = vm.child {
+                        NavigationLink(destination: ChildDeviceView()) {
+                            ChildSummaryCardView(
+                                child: child,
+                                todayBlocked: vm.todayBlockedCount,
+                                weeklyBlocked: vm.weeklyBlockedCount
+                            )
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
 
                     categorySection
                     recentEventsSection
@@ -40,26 +46,35 @@ struct DashboardView: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader("本週風險摘要")
 
-            VStack(spacing: 0) {
-                ForEach(vm.topCategories, id: \.label) { item in
-                    HStack {
-                        Text(item.label)
-                            .font(.subheadline)
-                        Spacer()
-                        Text("\(item.count) 次")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 16)
+            if vm.topCategories.isEmpty {
+                Text("本週尚無阻擋紀錄")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding()
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(vm.topCategories, id: \.label) { item in
+                        HStack {
+                            Text(item.label)
+                                .font(.subheadline)
+                            Spacer()
+                            Text("\(item.count) 次")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 16)
 
-                    if item.label != vm.topCategories.last?.label {
-                        Divider().padding(.leading, 16)
+                        if item.label != vm.topCategories.last?.label {
+                            Divider().padding(.leading, 16)
+                        }
                     }
                 }
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
             }
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
         }
     }
 
@@ -67,22 +82,28 @@ struct DashboardView: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader("最近阻擋紀錄")
 
-            VStack(spacing: 0) {
-                ForEach(vm.recentEvents) { event in
-                    BlockEventRow(event: event)
-                    if event.id != vm.recentEvents.last?.id {
-                        Divider().padding(.leading, 16)
+            if vm.recentEvents.isEmpty {
+                ContentUnavailableView(
+                    "尚無阻擋紀錄",
+                    systemImage: "checkmark.shield",
+                    description: Text("目前沒有任何被阻擋的紀錄")
+                )
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(vm.recentEvents) { event in
+                        BlockEventRow(event: event)
+                        if event.id != vm.recentEvents.last?.id {
+                            Divider().padding(.leading, 16)
+                        }
                     }
                 }
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
             }
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
         }
     }
 
     private func sectionHeader(_ title: String) -> some View {
-        Text(title)
-            .font(.headline)
-            .foregroundStyle(.primary)
+        Text(title).font(.headline).foregroundStyle(.primary)
     }
 }
 
@@ -124,5 +145,6 @@ struct BlockEventRow: View {
 
 #Preview {
     DashboardView()
+        .modelContainer(PreviewContainer.shared)
         .environment(AppState())
 }

@@ -1,37 +1,13 @@
 import Foundation
 
-/// 規則管理的顯示邏輯與操作代理。
-/// UI 狀態（selectedTab、showAddSheet）維持在 View 層的 @State，
-/// 此 struct 只負責計算與把操作轉發給 AppState。
+/// 規則管理顯示邏輯。
+/// 寫入操作（add / delete / toggle）透過 View 的 AppState + ModelContext 執行。
 struct RuleManagementViewModel {
-    private let store: AppState
-
-    init(store: AppState) {
-        self.store = store
-    }
-
-    // MARK: - Computed Properties
+    let rules: [Rule]  // 來自 @Query，SwiftData 自動保持最新
 
     func filteredRules(for tab: RuleType) -> [Rule] {
-        store.rules.filter { $0.type == tab }
-    }
-
-    // MARK: - Actions（委派給 AppState）
-
-    func toggle(_ rule: Rule) {
-        store.toggleRule(rule)
-    }
-
-    func delete(_ rule: Rule) {
-        store.deleteRule(rule)
-    }
-
-    func deleteByOffsets(_ offsets: IndexSet, tab: RuleType) {
-        let filtered = filteredRules(for: tab)
-        store.deleteRules(at: offsets, from: filtered)
-    }
-
-    func addRule(type: RuleType, value: String) {
-        store.addRule(type: type, value: value)
+        rules
+            .filter { $0.type == tab }
+            .sorted { $0.createdAt < $1.createdAt }
     }
 }

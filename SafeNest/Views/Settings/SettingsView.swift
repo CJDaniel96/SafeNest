@@ -1,44 +1,46 @@
 import SwiftUI
+import SwiftData
 
 struct SettingsView: View {
+    @Query private var parents: [Parent]
+    @Query private var childProfiles: [ChildProfile]
     @Environment(AppState.self) private var appState
 
-    // 純 UI 開關：目前不影響其他頁面，維持在 View 層的 @State
     @State private var notificationsEnabled = true
     @State private var weeklySummaryEnabled = true
     @State private var parentalPINEnabled   = false
 
-    private var vm: SettingsViewModel { SettingsViewModel(store: appState) }
+    private var vm: SettingsViewModel {
+        SettingsViewModel(parent: parents.first, child: childProfiles.first)
+    }
 
     var body: some View {
         NavigationStack {
             List {
 
-                // 家長帳號
                 Section("家長帳號") {
-                    LabeledContent("姓名",    value: vm.parent.name)
-                    LabeledContent("電子郵件", value: vm.parent.email)
+                    LabeledContent("姓名",    value: vm.parentName)
+                    LabeledContent("電子郵件", value: vm.parentEmail)
                 }
 
-                // 受保護對象
                 Section("受保護對象") {
-                    LabeledContent("孩子名稱", value: vm.child.name)
-                    LabeledContent("年齡群組", value: vm.child.ageGroup)
-                    LabeledContent("裝置",    value: vm.child.deviceName ?? "尚未設定")
+                    LabeledContent("孩子名稱", value: vm.childName)
+                    LabeledContent("年齡群組", value: vm.childAgeGroup)
+                    LabeledContent("裝置",    value: vm.deviceName)
 
-                    // 保護開關：寫入 AppState → Dashboard 同步更新
-                    HStack {
-                        Label("網路保護", systemImage: "shield.fill")
-                        Spacer()
-                        Toggle("", isOn: Binding(
-                            get: { vm.child.protectionEnabled },
-                            set: { _ in vm.toggleProtection() }
-                        ))
-                        .labelsHidden()
+                    if let child = childProfiles.first {
+                        HStack {
+                            Label("網路保護", systemImage: "shield.fill")
+                            Spacer()
+                            Toggle("", isOn: Binding(
+                                get: { child.protectionEnabled },
+                                set: { _ in appState.toggleProtection(child) }
+                            ))
+                            .labelsHidden()
+                        }
                     }
                 }
 
-                // 通知
                 Section("通知") {
                     Toggle(isOn: $notificationsEnabled) {
                         Label("推播通知", systemImage: "bell.fill")
@@ -48,7 +50,6 @@ struct SettingsView: View {
                     }
                 }
 
-                // 安全性
                 Section("安全性") {
                     Toggle(isOn: $parentalPINEnabled) {
                         Label("家長 PIN 碼", systemImage: "lock.fill")
@@ -62,7 +63,6 @@ struct SettingsView: View {
                     .disabled(!parentalPINEnabled)
                 }
 
-                // 關於
                 Section("關於") {
                     LabeledContent("版本", value: "1.0.0 (MVP)")
                     Button {
@@ -81,5 +81,6 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
+        .modelContainer(PreviewContainer.shared)
         .environment(AppState())
 }

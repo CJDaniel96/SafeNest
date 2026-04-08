@@ -1,8 +1,9 @@
 import Foundation
+import SwiftData
 
-// MARK: - RuleType
+// MARK: - RuleType（Codable 供 SwiftData 儲存）
 
-enum RuleType: String, CaseIterable, Hashable, Identifiable {
+enum RuleType: String, CaseIterable, Hashable, Identifiable, Codable {
     case blacklist = "blacklist"
     case whitelist = "whitelist"
     case category  = "category"
@@ -20,11 +21,26 @@ enum RuleType: String, CaseIterable, Hashable, Identifiable {
 
 // MARK: - Rule
 
-struct Rule: Identifiable {
-    let id: String
-    let childProfileId: String
-    let type: RuleType   // ← enum，不再用 String
-    let value: String
+@Model
+final class Rule {
+    var id: String
+    var childProfileId: String
+    var type: RuleType   // enum，SwiftData 透過 Codable 序列化
+    var value: String
     var enabled: Bool
-    let createdAt: Date
+    var createdAt: Date
+
+    init(id: String = UUID().uuidString,
+         childProfileId: String,
+         type: RuleType,
+         value: String,
+         enabled: Bool = true,
+         createdAt: Date = Date()) {
+        self.id             = id
+        self.childProfileId = childProfileId
+        self.type           = type
+        self.value          = value
+        self.enabled        = enabled
+        self.createdAt      = createdAt
+    }
 }

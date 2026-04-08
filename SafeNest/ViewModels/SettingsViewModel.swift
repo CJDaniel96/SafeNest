@@ -1,23 +1,14 @@
 import Foundation
 
-/// 設定頁的顯示邏輯與操作代理。
-/// notificationsEnabled / weeklySummaryEnabled / parentalPINEnabled 等純 UI 開關
-/// 維持在 View 層的 @State（目前不影響其他頁面）。
+/// 設定頁顯示邏輯。
 struct SettingsViewModel {
-    private let store: AppState
+    let parent: Parent?
+    let child: ChildProfile?
 
-    init(store: AppState) {
-        self.store = store
-    }
-
-    // MARK: - Computed Properties
-
-    var parent: Parent       { store.parent }
-    var child: ChildProfile  { store.childProfile }
-
-    // MARK: - Actions
-
-    func toggleProtection() {
-        store.toggleProtection()
-    }
+    var parentName: String  { parent?.name  ?? "未設定" }
+    var parentEmail: String { parent?.email ?? "" }
+    var childName: String   { child?.name   ?? "未設定" }
+    var childAgeGroup: String { child?.ageGroup ?? "" }
+    var deviceName: String  { child?.deviceName ?? "尚未設定" }
+    var protectionEnabled: Bool { child?.protectionEnabled ?? false }
 }

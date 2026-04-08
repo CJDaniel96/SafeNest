@@ -1,19 +1,20 @@
 import SwiftUI
+import SwiftData
 
 struct RuleManagementView: View {
+    @Query private var rules: [Rule]
+    @Environment(\.modelContext) private var modelContext
     @Environment(AppState.self) private var appState
 
-    // UI 狀態維持在 View 層
     @State private var selectedTab: RuleType = .blacklist
     @State private var showAddSheet = false
 
-    private var vm: RuleManagementViewModel { RuleManagementViewModel(store: appState) }
+    private var vm: RuleManagementViewModel { RuleManagementViewModel(rules: rules) }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
 
-                // 分頁切換
                 Picker("規則類型", selection: $selectedTab) {
                     ForEach(RuleType.allCases) { type in
                         Text(type.displayName).tag(type)
@@ -22,20 +23,30 @@ struct RuleManagementView: View {
                 .pickerStyle(.segmented)
                 .padding()
 
-                // 規則列表
-                List {
-                    ForEach(vm.filteredRules(for: selectedTab)) { rule in
-                        RuleRowView(rule: rule) {
-                            vm.toggle(rule)
+                let filtered = vm.filteredRules(for: selectedTab)
+
+                if filtered.isEmpty {
+                    ContentUnavailableView(
+                        "沒有\(selectedTab.displayName)規則",
+                        systemImage: "list.bullet.rectangle",
+                        description: Text("點右上角 + 新增規則")
+                    )
+                    .frame(maxHeight: .infinity)
+                } else {
+                    List {
+                        ForEach(filtered) { rule in
+                            RuleRowView(rule: rule) {
+                                appState.toggleRule(rule)
+                            }
+                        }
+                        .onDelete { offsets in
+                            appState.deleteRules(at: offsets, from: filtered, in: modelContext)
                         }
                     }
-                    .onDelete { offsets in
-                        vm.deleteByOffsets(offsets, tab: selectedTab)
-                    }
+                    .listStyle(.insetGrouped)
                 }
-                .listStyle(.insetGrouped)
-                .animation(.default, value: selectedTab)
             }
+            .animation(.default, value: selectedTab)
             .navigationTitle("規則管理")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -47,7 +58,11 @@ struct RuleManagementView: View {
             }
             .sheet(isPresented: $showAddSheet) {
                 AddRuleSheetView(selectedType: selectedTab) { type, value in
-                    vm.addRule(type: type, value: value)
+                    appState.addRule(
+                        type: type, value: value,
+                        childProfileId: "child-001",
+                        in: modelContext
+                    )
                 }
             }
         }
@@ -83,5 +98,6 @@ struct RuleRowView: View {
 
 #Preview {
     RuleManagementView()
+        .modelContainer(PreviewContainer.shared)
         .environment(AppState())
 }

@@ -1,8 +1,9 @@
 import Foundation
+import SwiftData
 
-// MARK: - BlockEventCategory
+// MARK: - BlockEventCategory（Codable 供 SwiftData 儲存）
 
-enum BlockEventCategory: String, CaseIterable, Identifiable, Hashable {
+enum BlockEventCategory: String, CaseIterable, Identifiable, Hashable, Codable {
     case adult      = "成人內容"
     case gambling   = "賭博"
     case violence   = "暴力"
@@ -17,12 +18,29 @@ enum BlockEventCategory: String, CaseIterable, Identifiable, Hashable {
 
 // MARK: - BlockEvent
 
-struct BlockEvent: Identifiable {
-    let id: String
-    let childProfileId: String
-    let domain: String
-    let url: String?
-    let category: BlockEventCategory   // ← enum，不再用 String
-    let matchedRuleType: RuleType      // ← enum，不再用 String
-    let blockedAt: Date
+@Model
+final class BlockEvent {
+    var id: String
+    var childProfileId: String
+    var domain: String
+    var url: String?
+    var category: BlockEventCategory  // enum，SwiftData 透過 Codable 序列化
+    var matchedRuleType: RuleType     // enum，SwiftData 透過 Codable 序列化
+    var blockedAt: Date
+
+    init(id: String = UUID().uuidString,
+         childProfileId: String,
+         domain: String,
+         url: String? = nil,
+         category: BlockEventCategory,
+         matchedRuleType: RuleType,
+         blockedAt: Date = Date()) {
+        self.id             = id
+        self.childProfileId = childProfileId
+        self.domain         = domain
+        self.url            = url
+        self.category       = category
+        self.matchedRuleType = matchedRuleType
+        self.blockedAt      = blockedAt
+    }
 }
