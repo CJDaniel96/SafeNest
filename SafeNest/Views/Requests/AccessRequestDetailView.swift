@@ -107,14 +107,22 @@ struct AccessRequestDetailView: View {
     }
 }
 
+// S-4：使用 wrapper struct + @Query 從 PreviewContainer 取得真實被管理的 @Model 物件，
+// 避免裸 AccessRequest() 在沒有 ModelContext 的情況下使用 @Bindable。
 #Preview {
-    NavigationStack {
-        AccessRequestDetailView(request: AccessRequest(
-            childProfileId: "child-001",
-            domain: "youtube.com",
-            reason: "我需要看英文學習影片，這對我學英文很有幫助，老師也有推薦這些影片。",
-            status: .pending
-        ))
-        .environment(AppState())
+    struct Preview: View {
+        @Query(filter: #Predicate<AccessRequest> { $0.status == .pending })
+        private var requests: [AccessRequest]
+
+        var body: some View {
+            if let request = requests.first {
+                NavigationStack {
+                    AccessRequestDetailView(request: request)
+                        .environment(AppState())
+                }
+            }
+        }
     }
+    return Preview()
+        .modelContainer(PreviewContainer.shared)
 }

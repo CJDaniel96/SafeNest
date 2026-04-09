@@ -36,9 +36,11 @@ enum SeedDataService {
             ("rule-003", .blacklist, "violent-games.io",        false, daysAgo(8)),
             ("rule-004", .whitelist, "khanacademy.org",         true,  daysAgo(7)),
             ("rule-005", .whitelist, "nationalgeographic.com",  true,  daysAgo(6)),
-            ("rule-006", .category,  "賭博",                    true,  daysAgo(5)),
-            ("rule-007", .category,  "成人內容",                true,  daysAgo(4)),
-            ("rule-008", .category,  "暴力",                    false, daysAgo(3))
+            // S-1：category rule value 使用穩定英文 rawValue（對應 BlockEventCategory.rawValue）
+            // 顯示名稱由 RuleRowView 透過 BlockEventCategory(rawValue:)?.displayName 解碼
+            ("rule-006", .category,  BlockEventCategory.gambling.rawValue, true,  daysAgo(5)),
+            ("rule-007", .category,  BlockEventCategory.adult.rawValue,    true,  daysAgo(4)),
+            ("rule-008", .category,  BlockEventCategory.violence.rawValue, false, daysAgo(3))
         ]
         for (id, type, value, enabled, date) in rules {
             context.insert(Rule(

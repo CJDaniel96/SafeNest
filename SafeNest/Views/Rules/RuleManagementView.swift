@@ -79,7 +79,7 @@ struct RuleRowView: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 3) {
-                Text(rule.value)
+                Text(rule.valueDisplayName)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(rule.enabled ? .primary : .secondary)
@@ -94,6 +94,17 @@ struct RuleRowView: View {
             ))
             .labelsHidden()
         }
+    }
+}
+
+// MARK: - Rule display helper
+
+private extension Rule {
+    /// S-3：category 規則的 value 存的是 BlockEventCategory.rawValue；
+    /// 解碼為 displayName 以顯示中文名稱，fallback 顯示原始字串（相容舊資料）。
+    var valueDisplayName: String {
+        guard type == .category else { return value }
+        return BlockEventCategory(rawValue: value)?.displayName ?? value
     }
 }
 
