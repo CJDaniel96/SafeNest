@@ -6,7 +6,13 @@ import SwiftData
 enum PreviewContainer {
     @MainActor
     static let shared: ModelContainer = {
-        let schema = Schema([Parent.self, ChildProfile.self, Rule.self, BlockEvent.self])
+        let schema = Schema([
+            Parent.self,
+            ChildProfile.self,
+            Rule.self,
+            BlockEvent.self,
+            AccessRequest.self
+        ])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         let container = try! ModelContainer(for: schema, configurations: [config])
         SeedDataService.seedIfNeeded(in: container.mainContext)

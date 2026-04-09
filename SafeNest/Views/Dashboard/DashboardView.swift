@@ -3,11 +3,16 @@ import SwiftData
 
 struct DashboardView: View {
     @Query(sort: \BlockEvent.blockedAt, order: .reverse) private var blockEvents: [BlockEvent]
+    @Query(sort: \AccessRequest.requestedAt, order: .reverse) private var accessRequests: [AccessRequest]
     @Query private var childProfiles: [ChildProfile]
     @Environment(AppState.self) private var appState
 
     private var vm: DashboardViewModel {
-        DashboardViewModel(child: childProfiles.first, blockEvents: blockEvents)
+        DashboardViewModel(
+            child: childProfiles.first,
+            blockEvents: blockEvents,
+            accessRequests: accessRequests
+        )
     }
 
     var body: some View {
@@ -25,6 +30,7 @@ struct DashboardView: View {
                         .buttonStyle(.plain)
                     }
 
+                    pendingRequestsSection
                     categorySection
                     recentEventsSection
                 }
@@ -36,7 +42,55 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - Sections
+    // MARK: - Pending Requests Section
+
+    @ViewBuilder
+    private var pendingRequestsSection: some View {
+        if vm.pendingRequestCount > 0 || !vm.recentAccessRequests.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    SectionHeader(title: "審核申請")
+                    Spacer()
+                    if vm.pendingRequestCount > 0 {
+                        Text("\(vm.pendingRequestCount) 件待審核")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Color.orange.opacity(0.15), in: Capsule())
+                            .foregroundStyle(.orange)
+                    }
+                }
+
+                if vm.recentAccessRequests.isEmpty {
+                    Text("尚無申請紀錄")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding()
+                        .cardContainer()
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(Array(vm.recentAccessRequests.enumerated()), id: \.element.id) { index, request in
+                            NavigationLink(destination: AccessRequestDetailView(request: request)) {
+                                AccessRequestRow(request: request)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 4)
+                            }
+                            .buttonStyle(.plain)
+
+                            if index < vm.recentAccessRequests.count - 1 {
+                                Divider().padding(.leading, 56)
+                            }
+                        }
+                    }
+                    .cardContainer()
+                }
+            }
+        }
+    }
+
+    // MARK: - Category Section
 
     private var categorySection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -72,6 +126,8 @@ struct DashboardView: View {
             }
         }
     }
+
+    // MARK: - Recent Events Section
 
     private var recentEventsSection: some View {
         VStack(alignment: .leading, spacing: 12) {

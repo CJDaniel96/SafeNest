@@ -50,4 +50,36 @@ final class AppState {
     func toggleProtection(_ child: ChildProfile) {
         child.protectionEnabled.toggle()
     }
+
+    // MARK: - Access Request Mutations
+
+    /// 孩子送出審核申請，寫入 SwiftData
+    func submitAccessRequest(domain: String,
+                             childProfileId: String,
+                             reason: String,
+                             in context: ModelContext) {
+        let trimmed = reason.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        context.insert(AccessRequest(
+            childProfileId: childProfileId,
+            domain: domain,
+            reason: trimmed
+        ))
+    }
+
+    /// 家長核准申請，並可附上備註
+    func approveRequest(_ request: AccessRequest, note: String) {
+        request.status = .approved
+        request.reviewedAt = .now
+        let trimmed = note.trimmingCharacters(in: .whitespaces)
+        request.reviewerNote = trimmed.isEmpty ? nil : trimmed
+    }
+
+    /// 家長拒絕申請，並可附上原因
+    func denyRequest(_ request: AccessRequest, note: String) {
+        request.status = .denied
+        request.reviewedAt = .now
+        let trimmed = note.trimmingCharacters(in: .whitespaces)
+        request.reviewerNote = trimmed.isEmpty ? nil : trimmed
+    }
 }

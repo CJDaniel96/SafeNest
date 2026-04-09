@@ -11,7 +11,8 @@ struct SafeNestApp: App {
             Parent.self,
             ChildProfile.self,
             Rule.self,
-            BlockEvent.self
+            BlockEvent.self,
+            AccessRequest.self
         ])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {

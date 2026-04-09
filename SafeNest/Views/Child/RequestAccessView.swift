@@ -1,12 +1,16 @@
 import SwiftUI
+import SwiftData
 
-/// 孩子向家長申請審核特定網站的表單。成功後顯示確認畫面，不需真實後端。
+/// 孩子向家長申請審核特定網站的表單。成功後顯示確認畫面。
 struct RequestAccessView: View {
     let domain: String
     let category: BlockEventCategory
 
     @State private var vm = RequestAccessViewModel()
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @Environment(AppState.self) private var appState
+    @Query private var childProfiles: [ChildProfile]
 
     var body: some View {
         NavigationStack {
@@ -77,7 +81,7 @@ struct RequestAccessView: View {
 
     private var submitButton: some View {
         Button {
-            Task { await vm.submit(domain: domain) }
+            submitRequest()
         } label: {
             Group {
                 if vm.isSubmitting {
@@ -95,6 +99,22 @@ struct RequestAccessView: View {
             .foregroundStyle(.white)
         }
         .disabled(!vm.canSubmit)
+    }
+
+    // MARK: - Submit
+
+    private func submitRequest() {
+        guard vm.canSubmit,
+              let childId = childProfiles.first?.id else { return }
+        vm.isSubmitting = true
+        appState.submitAccessRequest(
+            domain: domain,
+            childProfileId: childId,
+            reason: vm.reason,
+            in: modelContext
+        )
+        vm.isSubmitting = false
+        vm.didSubmitSuccessfully = true
     }
 
     // MARK: - Success
@@ -133,4 +153,6 @@ struct RequestAccessView: View {
 
 #Preview {
     RequestAccessView(domain: "gambling-site.com", category: .gambling)
+        .modelContainer(PreviewContainer.shared)
+        .environment(AppState())
 }

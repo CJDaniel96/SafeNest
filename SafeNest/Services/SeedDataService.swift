@@ -50,16 +50,16 @@ enum SeedDataService {
 
         // BlockEvents
         let events: [(String, String, String?, BlockEventCategory, RuleType, TimeInterval)] = [
-            ("evt-001", "gambling-site.com",  "https://gambling-site.com/poker", .gambling,   .blacklist, -60 * 30),
-            ("evt-002", "adult-content.net",  nil,                               .adult,      .blacklist, -60 * 90),
-            ("evt-003", "violent-games.io",   nil,                               .violence,   .blacklist, -60 * 180),
-            ("evt-004", "bad-ads-tracker.com",nil,                               .adTracking, .category,  -60 * 60 * 5),
-            ("evt-005", "phishing-example.org",nil,                              .phishing,   .category,  -60 * 60 * 8),
-            ("evt-006", "gambling-site.com",  nil,                               .gambling,   .blacklist, -60 * 60 * 25),
-            ("evt-007", "adult-content.net",  nil,                               .adult,      .blacklist, -60 * 60 * 26),
-            ("evt-008", "violent-games.io",   nil,                               .violence,   .blacklist, -60 * 60 * 30),
-            ("evt-009", "spam-news.com",      nil,                               .spam,       .category,  -60 * 60 * 48),
-            ("evt-010", "gambling-site.com",  nil,                               .gambling,   .blacklist, -60 * 60 * 72)
+            ("evt-001", "gambling-site.com",   "https://gambling-site.com/poker", .gambling,   .blacklist, -60 * 30),
+            ("evt-002", "adult-content.net",   nil,                               .adult,      .blacklist, -60 * 90),
+            ("evt-003", "violent-games.io",    nil,                               .violence,   .blacklist, -60 * 180),
+            ("evt-004", "bad-ads-tracker.com", nil,                               .adTracking, .category,  -60 * 60 * 5),
+            ("evt-005", "phishing-example.org",nil,                               .phishing,   .category,  -60 * 60 * 8),
+            ("evt-006", "gambling-site.com",   nil,                               .gambling,   .blacklist, -60 * 60 * 25),
+            ("evt-007", "adult-content.net",   nil,                               .adult,      .blacklist, -60 * 60 * 26),
+            ("evt-008", "violent-games.io",    nil,                               .violence,   .blacklist, -60 * 60 * 30),
+            ("evt-009", "spam-news.com",        nil,                               .spam,       .category,  -60 * 60 * 48),
+            ("evt-010", "gambling-site.com",   nil,                               .gambling,   .blacklist, -60 * 60 * 72)
         ]
         for (id, domain, url, cat, ruleType, offset) in events {
             context.insert(BlockEvent(
@@ -67,6 +67,38 @@ enum SeedDataService {
                 domain: domain, url: url,
                 category: cat, matchedRuleType: ruleType,
                 blockedAt: Date(timeIntervalSinceNow: offset)
+            ))
+        }
+
+        // AccessRequests（Demo：待審核、已核准、已拒絕各一筆）
+        let accessRequests: [(String, String, TimeInterval, String, AccessRequestStatus, TimeInterval?, String?)] = [
+            (
+                "req-001", "youtube.com", -60 * 60 * 2,
+                "我需要看英文學習影片，這對我學英文很有幫助，老師也有推薦這些影片。",
+                .pending, nil, nil
+            ),
+            (
+                "req-002", "roblox.com", -60 * 60 * 48,
+                "班上同學都在玩，我也想跟大家一起玩，不會花太多時間的。",
+                .approved, -60 * 60 * 24, "可以玩，但每天最多一小時，功課做完才能玩。"
+            ),
+            (
+                "req-003", "tiktok.com", -60 * 60 * 72,
+                "我想看一些有趣的短影片，放鬆一下。",
+                .denied, -60 * 60 * 60, "TikTok 的內容不適合你的年齡，等大一點再說。"
+            )
+        ]
+        for (id, domain, reqOffset, reason, status, reviewOffset, note) in accessRequests {
+            let reviewedAt = reviewOffset.map { Date(timeIntervalSinceNow: $0) }
+            context.insert(AccessRequest(
+                id: id,
+                childProfileId: childId,
+                domain: domain,
+                requestedAt: Date(timeIntervalSinceNow: reqOffset),
+                reason: reason,
+                status: status,
+                reviewedAt: reviewedAt,
+                reviewerNote: note
             ))
         }
 

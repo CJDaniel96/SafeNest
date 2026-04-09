@@ -1,6 +1,8 @@
 import Foundation
 
-/// 家長審核申請的本地狀態。不需持久化，送出後僅顯示成功提示。
+/// 家長審核申請表單的本地狀態。
+/// 送出操作由 View 呼叫 AppState.submitAccessRequest(...)，
+/// 此 ViewModel 僅管理表單輸入與送出後的 UI 狀態。
 @Observable
 final class RequestAccessViewModel {
     var reason: String = ""
@@ -9,16 +11,6 @@ final class RequestAccessViewModel {
 
     var canSubmit: Bool {
         !reason.trimmingCharacters(in: .whitespaces).isEmpty && !isSubmitting
-    }
-
-    /// 模擬送出申請（MVP：無真實後端，1 秒後標記成功）
-    func submit(domain: String) async {
-        guard canSubmit else { return }
-        isSubmitting = true
-        try? await Task.sleep(for: .seconds(1))
-        // TODO: 未來連接後端 API，將 domain + reason 傳送給家長
-        didSubmitSuccessfully = true
-        isSubmitting = false
     }
 
     func reset() {

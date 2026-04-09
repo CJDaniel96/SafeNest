@@ -10,6 +10,9 @@ struct ChildTabView: View {
 
             ProtectionStatusView()
                 .tabItem { Label("狀態", systemImage: "shield.fill") }
+
+            RequestHistoryView()
+                .tabItem { Label("申請", systemImage: "paperplane.fill") }
         }
     }
 }

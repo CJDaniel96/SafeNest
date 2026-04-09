@@ -1,12 +1,13 @@
 import Foundation
 
 /// Dashboard 顯示邏輯。
-/// 資料來源改為從 View 的 @Query 結果傳入，不再持有 AppState。
+/// 資料來源由 View 的 @Query 結果傳入，不再持有 AppState。
 struct DashboardViewModel {
     let child: ChildProfile?
-    let blockEvents: [BlockEvent]  // 由呼叫端傳入已排序（最新優先）的事件
+    let blockEvents: [BlockEvent]       // 已排序（最新優先）
+    let accessRequests: [AccessRequest] // 已排序（最新優先）
 
-    // MARK: - Computed
+    // MARK: - Block Events
 
     var weeklySummary: WeeklySummary { WeeklySummary(from: blockEvents) }
 
@@ -31,5 +32,16 @@ struct DashboardViewModel {
         ]
         .filter { $0.count > 0 }
         .sorted { $0.count > $1.count }
+    }
+
+    // MARK: - Access Requests
+
+    var pendingRequestCount: Int {
+        accessRequests.filter { $0.status == .pending }.count
+    }
+
+    /// 最近 3 筆申請（含所有狀態）
+    var recentAccessRequests: [AccessRequest] {
+        Array(accessRequests.prefix(3))
     }
 }
