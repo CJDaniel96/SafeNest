@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 /// 兒少端主導覽。AppState 由環境自動傳遞，此 View 本身不需取用。
 struct ChildTabView: View {

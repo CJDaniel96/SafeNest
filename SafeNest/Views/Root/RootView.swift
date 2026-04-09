@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 /// App 根視圖：依 AppState.currentRole 切換家長端或兒少端導覽。
 struct RootView: View {
