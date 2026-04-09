@@ -5,6 +5,7 @@ struct SettingsView: View {
     @Query private var parents: [Parent]
     @Query private var childProfiles: [ChildProfile]
     @Environment(AppState.self) private var appState
+    @Environment(\.modelContext) private var modelContext
 
     @State private var notificationsEnabled = true
     @State private var weeklySummaryEnabled = true
@@ -20,6 +21,7 @@ struct SettingsView: View {
 
                 // MARK: 裝置模式（角色切換）
                 Section {
+                    // I-5：currentRole 是 private(set)，必須透過 switchRole(to:) 切換
                     Picker("目前模式", selection: Binding(
                         get: { appState.currentRole },
                         set: { appState.switchRole(to: $0) }
@@ -37,7 +39,7 @@ struct SettingsView: View {
 
                 // MARK: 家長帳號
                 Section("家長帳號") {
-                    LabeledContent("姓名",    value: vm.parentName)
+                    LabeledContent("姓名",     value: vm.parentName)
                     LabeledContent("電子郵件", value: vm.parentEmail)
                 }
 
@@ -45,7 +47,7 @@ struct SettingsView: View {
                 Section("受保護對象") {
                     LabeledContent("孩子名稱", value: vm.childName)
                     LabeledContent("年齡群組", value: vm.childAgeGroup)
-                    LabeledContent("裝置",    value: vm.deviceName)
+                    LabeledContent("裝置",     value: vm.deviceName)
 
                     if let child = childProfiles.first {
                         HStack {

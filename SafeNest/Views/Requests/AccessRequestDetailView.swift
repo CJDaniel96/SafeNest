@@ -16,7 +16,7 @@ struct AccessRequestDetailView: View {
             // MARK: 申請資訊
             Section("申請資訊") {
                 LabeledContent("網站", value: request.domain)
-                LabeledContent("申請時間", value: DateFormatter.shortDateTime.string(from: request.requestedAt))
+                LabeledContent("申請時間", value: request.requestedAt.shortDateTime)
                 LabeledContent("目前狀態") {
                     StatusBadge(status: request.status)
                 }
@@ -34,7 +34,7 @@ struct AccessRequestDetailView: View {
             if request.status != .pending {
                 Section("審核結果") {
                     if let reviewedAt = request.reviewedAt {
-                        LabeledContent("審核時間", value: DateFormatter.shortDateTime.string(from: reviewedAt))
+                        LabeledContent("審核時間", value: reviewedAt.shortDateTime)
                     }
                     if let note = request.reviewerNote, !note.isEmpty {
                         VStack(alignment: .leading, spacing: 6) {

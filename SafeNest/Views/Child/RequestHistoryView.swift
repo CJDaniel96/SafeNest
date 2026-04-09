@@ -13,7 +13,12 @@ struct RequestHistoryView: View {
         NavigationStack {
             Group {
                 if requests.isEmpty {
-                    emptyState
+                    // D-1：改用共用 EmptyStateView，移除重複的 private var emptyState
+                    EmptyStateView(
+                        icon: "paperplane.fill",
+                        title: "還沒有申請紀錄",
+                        description: "當你申請瀏覽被阻擋的網站時，\n紀錄會顯示在這裡"
+                    )
                 } else {
                     List {
                         if !vm.pendingRequests.isEmpty {
@@ -43,7 +48,7 @@ struct RequestHistoryView: View {
         }
     }
 
-    // MARK: - Row
+    // MARK: - Row（含家長回覆）
 
     @ViewBuilder
     private func requestRow(_ request: AccessRequest) -> some View {
@@ -66,24 +71,6 @@ struct RequestHistoryView: View {
             }
         }
         .padding(.vertical, 2)
-    }
-
-    // MARK: - Empty State
-
-    private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "paperplane.fill")
-                .font(.system(size: 52))
-                .foregroundStyle(.secondary.opacity(0.5))
-            Text("還沒有申請紀錄")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            Text("當你申請瀏覽被阻擋的網站時，\n紀錄會顯示在這裡")
-                .font(.subheadline)
-                .foregroundStyle(.tertiary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
     }
 }
 

@@ -5,7 +5,7 @@ struct DashboardView: View {
     @Query(sort: \BlockEvent.blockedAt, order: .reverse) private var blockEvents: [BlockEvent]
     @Query(sort: \AccessRequest.requestedAt, order: .reverse) private var accessRequests: [AccessRequest]
     @Query private var childProfiles: [ChildProfile]
-    @Environment(AppState.self) private var appState
+    // 此 View 只顯示資料，寫入操作在子頁面（AccessRequestDetailView）執行，不需注入 AppState
 
     private var vm: DashboardViewModel {
         DashboardViewModel(
@@ -17,28 +17,40 @@ struct DashboardView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    if let child = vm.child {
-                        NavigationLink(destination: ChildDeviceView()) {
-                            ChildSummaryCardView(
-                                child: child,
-                                todayBlocked: vm.todayBlockedCount,
-                                weeklyBlocked: vm.weeklyBlockedCount
-                            )
+            // U-1：child == nil 時顯示引導空狀態，避免裸露的空 section 堆疊
+            if vm.child == nil {
+                EmptyStateView(
+                    icon: "person.badge.plus",
+                    title: "尚未設定孩子檔案",
+                    description: "請至「設定」頁新增孩子資訊，即可開始監控上網安全。"
+                )
+                .frame(maxHeight: .infinity)
+                .navigationTitle("SafeNest")
+                .navigationBarTitleDisplayMode(.large)
+            } else {
+                ScrollView {
+                    VStack(spacing: 20) {
+                        if let child = vm.child {
+                            NavigationLink(destination: ChildDeviceView()) {
+                                ChildSummaryCardView(
+                                    child: child,
+                                    todayBlocked: vm.todayBlockedCount,
+                                    weeklyBlocked: vm.weeklyBlockedCount
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
-                    }
 
-                    pendingRequestsSection
-                    categorySection
-                    recentEventsSection
+                        pendingRequestsSection
+                        categorySection
+                        recentEventsSection
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 24)
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 24)
+                .navigationTitle("SafeNest")
+                .navigationBarTitleDisplayMode(.large)
             }
-            .navigationTitle("SafeNest")
-            .navigationBarTitleDisplayMode(.large)
         }
     }
 

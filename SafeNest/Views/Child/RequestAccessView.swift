@@ -137,6 +137,12 @@ struct RequestAccessView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
+
+                // U-6：引導孩子到「我的申請」Tab 追蹤審核進度
+                Label("可以去「我的申請」查看審核進度", systemImage: "paperplane.fill")
+                    .font(.caption)
+                    .foregroundStyle(.blue)
+                    .padding(.top, 4)
             }
 
             Button("完成") { dismiss() }

@@ -56,9 +56,10 @@ struct BlockEventList: View {
             )
         } else {
             VStack(spacing: 0) {
-                ForEach(events) { event in
-                    BlockEventRow(event: event)
-                    if event.id != events.last?.id {
+                // P4：改用 index 判斷是否為最後一筆，不依賴 id 比對
+                ForEach(events.indices, id: \.self) { index in
+                    BlockEventRow(event: events[index])
+                    if index < events.count - 1 {
                         Divider().padding(.leading, 16)
                     }
                 }

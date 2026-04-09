@@ -20,10 +20,10 @@ enum SeedDataService {
             createdAt: daysAgo(30)
         ))
 
-        // ChildProfile
+        // ChildProfile（ageGroup 使用 AgeGroup enum）
         context.insert(ChildProfile(
             id: childId, parentId: parentId,
-            name: "小安", ageGroup: "6–12 歲",
+            name: "小安", ageGroup: .elementary,
             deviceName: "小安的 iPhone",
             protectionEnabled: true,
             createdAt: daysAgo(20)
@@ -48,7 +48,7 @@ enum SeedDataService {
             ))
         }
 
-        // BlockEvents
+        // BlockEvents（category 使用英文 rawValue 的 BlockEventCategory enum）
         let events: [(String, String, String?, BlockEventCategory, RuleType, TimeInterval)] = [
             ("evt-001", "gambling-site.com",   "https://gambling-site.com/poker", .gambling,   .blacklist, -60 * 30),
             ("evt-002", "adult-content.net",   nil,                               .adult,      .blacklist, -60 * 90),
@@ -70,7 +70,7 @@ enum SeedDataService {
             ))
         }
 
-        // AccessRequests（Demo：待審核、已核准、已拒絕各一筆）
+        // AccessRequests
         let accessRequests: [(String, String, TimeInterval, String, AccessRequestStatus, TimeInterval?, String?)] = [
             (
                 "req-001", "youtube.com", -60 * 60 * 2,

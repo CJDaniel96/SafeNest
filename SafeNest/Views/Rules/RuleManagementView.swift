@@ -3,6 +3,7 @@ import SwiftData
 
 struct RuleManagementView: View {
     @Query private var rules: [Rule]
+    @Query private var childProfiles: [ChildProfile]   // P1：從 SwiftData 取得，不再硬編碼
     @Environment(\.modelContext) private var modelContext
     @Environment(AppState.self) private var appState
 
@@ -60,7 +61,7 @@ struct RuleManagementView: View {
                 AddRuleSheetView(selectedType: selectedTab) { type, value in
                     appState.addRule(
                         type: type, value: value,
-                        childProfileId: "child-001",
+                        childProfileId: childProfiles.first?.id ?? "",  // P1：使用實際 ID
                         in: modelContext
                     )
                 }

@@ -25,7 +25,9 @@ struct ProtectionStatusView: View {
                     protectionCard
                     statsSection
                     ruleBreakdownSection
-                    demoSection
+                    DemoSectionView {
+                        navigateToBlocked = true
+                    }
                     switchModeSection
                 }
                 .padding()
@@ -45,16 +47,18 @@ struct ProtectionStatusView: View {
         HStack(spacing: 14) {
             Image(systemName: vm.protectionEnabled ? "shield.fill" : "shield.slash.fill")
                 .font(.title)
-                .foregroundStyle(vm.protectionEnabled ? Color.green : Color.red)
+                .foregroundStyle(vm.protectionEnabled ? Color.green : Color.orange)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(vm.protectionEnabled ? "SafeNest 保護中" : "保護已暫停")
+                // U-4：語氣統一，去除「此裝置」技術用語
+                Text(vm.protectionEnabled ? "SafeNest 保護中 🛡️" : "保護功能還沒開啟")
                     .font(.headline)
                 Text(vm.protectionEnabled
-                    ? "此裝置目前受 SafeNest 保護"
-                    : "請聯絡家長重新啟用保護")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    ? "你的上網體驗受到保護"
+                    : "可以跟家長說要開啟保護功能"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
             Spacer()
         }
@@ -68,24 +72,10 @@ struct ProtectionStatusView: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: "攔截統計")
             HStack(spacing: 12) {
-                statCard(value: "\(vm.todayBlockedCount)", label: "今日攔截", color: .blue)
-                statCard(value: "\(vm.weeklyBlockedCount)", label: "本週攔截", color: .purple)
+                StatCard(value: "\(vm.todayBlockedCount)",  label: "今日攔截", color: .blue)
+                StatCard(value: "\(vm.weeklyBlockedCount)", label: "本週攔截", color: .purple)
             }
         }
-    }
-
-    private func statCard(value: String, label: String, color: Color) -> some View {
-        VStack(spacing: 4) {
-            Text(value)
-                .font(.system(size: 36, weight: .bold))
-                .foregroundStyle(color)
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 20)
-        .cardContainer()
     }
 
     // MARK: - Rule Breakdown
@@ -93,12 +83,29 @@ struct ProtectionStatusView: View {
     private var ruleBreakdownSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: "規則摘要")
+
             VStack(spacing: 0) {
-                ruleRow(icon: "xmark.circle.fill",     color: .red,    label: "封鎖規則",  count: vm.blacklistCount)
+                ruleRow(icon: "xmark.circle.fill",     color: .red,    label: "封鎖規則", count: vm.blacklistCount)
                 Divider().padding(.leading, 52)
-                ruleRow(icon: "checkmark.circle.fill", color: .green,  label: "允許規則",  count: vm.whitelistCount)
+                ruleRow(icon: "checkmark.circle.fill", color: .green,  label: "允許規則", count: vm.whitelistCount)
                 Divider().padding(.leading, 52)
-                ruleRow(icon: "tag.fill",              color: .orange, label: "類別封鎖",  count: vm.categoryCount)
+                ruleRow(icon: "tag.fill",              color: .orange, label: "類別封鎖", count: vm.categoryCount)
+
+                // U-2：所有啟用規則為 0 時，給孩子一個友善提示
+                if vm.enabledRulesCount == 0 {
+                    Divider().padding(.leading, 52)
+                    HStack(spacing: 8) {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(.secondary)
+                            .frame(width: 28)
+                        Text("目前沒有啟用的保護規則，可以跟家長說要設定。")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 16)
+                }
             }
             .cardContainer()
         }
@@ -118,27 +125,6 @@ struct ProtectionStatusView: View {
         }
         .padding(.vertical, 12)
         .padding(.horizontal, 16)
-    }
-
-    // MARK: - Demo Section
-
-    private var demoSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "體驗示範")
-            Button {
-                navigateToBlocked = true
-            } label: {
-                HStack {
-                    Image(systemName: "hand.raised.fill").foregroundStyle(.orange)
-                    Text("模擬被阻擋的頁面").fontWeight(.medium)
-                    Spacer()
-                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
-                }
-                .padding()
-                .cardContainer()
-            }
-            .buttonStyle(.plain)
-        }
     }
 
     // MARK: - Switch Mode

@@ -20,7 +20,7 @@ struct MainTabView: View {
 
             AccessRequestInboxView()
                 .tabItem { Label("審核", systemImage: "person.badge.key.fill") }
-                .badge(pendingRequests.count > 0 ? pendingRequests.count : 0)
+                .badge(pendingRequests.count)   // P6：count 為 0 時 SwiftUI 本就不顯示 badge
 
             SettingsView()
                 .tabItem { Label("設定", systemImage: "gearshape.fill") }

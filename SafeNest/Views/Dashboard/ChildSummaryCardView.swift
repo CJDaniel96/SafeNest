@@ -20,7 +20,8 @@ struct ChildSummaryCardView: View {
                             .fontWeight(.bold)
                             .foregroundStyle(.white)
                     }
-                    Text(child.ageGroup)
+                    // ageGroup 為 AgeGroup enum，透過 displayName 取得顯示文字
+                    Text(child.ageGroup.displayName)
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.8))
                 }
@@ -94,10 +95,11 @@ struct ChildSummaryCardView: View {
 }
 
 #Preview {
+    // AgeGroup enum 取代裸字串 "6–12 歲"
     let child = ChildProfile(
         parentId: "p-001",
         name: "小安",
-        ageGroup: "6–12 歲",
+        ageGroup: .elementary,
         deviceName: "小安的 iPhone",
         protectionEnabled: true
     )

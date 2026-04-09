@@ -4,7 +4,8 @@ import SwiftData
 struct ChildDeviceView: View {
     @Query(sort: \BlockEvent.blockedAt, order: .reverse) private var blockEvents: [BlockEvent]
     @Query private var childProfiles: [ChildProfile]
-    @Environment(AppState.self) private var appState
+    // I-3：移除未使用的 @Environment(AppState.self)
+    // 此 View 只顯示資料，不執行任何寫入操作
 
     private var vm: ChildDeviceViewModel {
         ChildDeviceViewModel(
@@ -37,9 +38,6 @@ struct ChildDeviceView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(vm.deviceDisplayName)
                         .font(.headline)
-                    Text(vm.ageGroup)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
                 }
                 Spacer()
             }

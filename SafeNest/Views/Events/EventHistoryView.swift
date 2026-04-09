@@ -3,7 +3,7 @@ import SwiftData
 
 struct EventHistoryView: View {
     @Query(sort: \BlockEvent.blockedAt, order: .reverse) private var blockEvents: [BlockEvent]
-    @Environment(AppState.self) private var appState
+    // 此 View 只顯示資料，不執行任何寫入操作，不需注入 AppState
 
     @State private var selectedCategory: BlockEventCategory? = nil
 
@@ -47,14 +47,14 @@ struct EventHistoryView: View {
     private var eventList: some View {
         let filtered = vm.filteredEvents(category: selectedCategory)
         if filtered.isEmpty {
+            // P2：移除 selectedCategory! 強制解包，改用 map
+            let description = selectedCategory
+                .map { "目前沒有「\($0.displayName)」的阻擋紀錄" }
+                ?? "目前沒有阻擋紀錄"
             ContentUnavailableView(
                 "沒有符合的紀錄",
                 systemImage: "clock.badge.checkmark",
-                description: Text(
-                    selectedCategory != nil
-                        ? "目前沒有「\(selectedCategory!.displayName)」的阻擋紀錄"
-                        : "目前沒有阻擋紀錄"
-                )
+                description: Text(description)
             )
         } else {
             List(filtered) { event in

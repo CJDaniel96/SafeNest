@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class Parent {
-    var id: String
+    @Attribute(.unique) var id: String   // I-1：唯一約束，防止 seed 重複執行時產生重複紀錄
     var name: String
     var email: String
     var createdAt: Date

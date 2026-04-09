@@ -4,7 +4,7 @@ import SwiftData
 /// 家長端：審核申請收件匣
 struct AccessRequestInboxView: View {
     @Query(sort: \AccessRequest.requestedAt, order: .reverse) private var requests: [AccessRequest]
-    @Environment(AppState.self) private var appState
+    // 審核操作在子頁面（AccessRequestDetailView）執行，此 View 不需注入 AppState
 
     private var vm: AccessRequestInboxViewModel {
         AccessRequestInboxViewModel(requests: requests)
@@ -14,7 +14,12 @@ struct AccessRequestInboxView: View {
         NavigationStack {
             Group {
                 if requests.isEmpty {
-                    emptyState
+                    // D-1：改用共用 EmptyStateView，移除重複的 private var emptyState
+                    EmptyStateView(
+                        icon: "tray.fill",
+                        title: "目前沒有審核申請",
+                        description: "孩子提出申請後會顯示在這裡"
+                    )
                 } else {
                     List {
                         if !vm.pendingRequests.isEmpty {
@@ -46,24 +51,6 @@ struct AccessRequestInboxView: View {
             .navigationTitle("審核申請")
             .navigationBarTitleDisplayMode(.large)
         }
-    }
-
-    // MARK: - Empty State
-
-    private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "tray.fill")
-                .font(.system(size: 52))
-                .foregroundStyle(.secondary.opacity(0.5))
-            Text("目前沒有審核申請")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            Text("孩子提出申請後會顯示在這裡")
-                .font(.subheadline)
-                .foregroundStyle(.tertiary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
     }
 }
 

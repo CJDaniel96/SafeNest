@@ -23,7 +23,7 @@ enum RuleType: String, CaseIterable, Hashable, Identifiable, Codable {
 
 @Model
 final class Rule {
-    var id: String
+    @Attribute(.unique) var id: String   // I-1：唯一約束，防止重複紀錄
     var childProfileId: String
     var type: RuleType   // enum，SwiftData 透過 Codable 序列化
     var value: String

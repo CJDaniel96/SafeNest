@@ -35,7 +35,7 @@ struct BlockedContentView: View {
                 .foregroundStyle(.orange)
                 .padding(.top, 16)
 
-            Text("這個網站目前無法瀏覽")
+            Text("這個網站目前無法開啟")
                 .font(.title2)
                 .fontWeight(.bold)
                 .multilineTextAlignment(.center)
@@ -58,8 +58,9 @@ struct BlockedContentView: View {
         .cardContainer()
     }
 
+    // U-5：改用第一人稱友善口吻，去除「過濾規則」政策感
     private var explanationSection: some View {
-        Text("這個網站的內容符合家長設定的過濾規則。\n如果你認為這是誤判，或有特殊需求，\n可以向家長申請審核。")
+        Text("這個網站被保護功能擋下來了。\n如果你覺得可以瀏覽，可以向家長提出申請，\n等家長確認後就能開啟囉！")
             .font(.subheadline)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
@@ -71,7 +72,7 @@ struct BlockedContentView: View {
             Button {
                 showRequestAccess = true
             } label: {
-                Label("向家長申請審核", systemImage: "person.badge.key.fill")
+                Label("向家長申請開放", systemImage: "person.badge.key.fill")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
