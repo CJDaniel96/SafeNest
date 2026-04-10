@@ -2,6 +2,10 @@ import SwiftUI
 import SwiftData
 
 /// 孩子向家長申請審核特定網站的表單。成功後顯示確認畫面。
+///
+/// Round 6 變更：
+/// - 移除 `@Environment(AppState.self)`（submit 邏輯已移至 RequestAccessViewModel）
+/// - 呼叫 `vm.submit(domain:childProfileId:in:)` 取代直接呼叫 AppState
 struct RequestAccessView: View {
     let domain: String
     let category: BlockEventCategory
@@ -9,7 +13,6 @@ struct RequestAccessView: View {
     @State private var vm = RequestAccessViewModel()
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @Environment(AppState.self) private var appState
     @Query private var childProfiles: [ChildProfile]
 
     var body: some View {
@@ -104,17 +107,9 @@ struct RequestAccessView: View {
     // MARK: - Submit
 
     private func submitRequest() {
-        guard vm.canSubmit,
-              let childId = childProfiles.first?.id else { return }
-        vm.isSubmitting = true
-        appState.submitAccessRequest(
-            domain: domain,
-            childProfileId: childId,
-            reason: vm.reason,
-            in: modelContext
-        )
-        vm.isSubmitting = false
-        vm.didSubmitSuccessfully = true
+        guard let childId = childProfiles.first?.id else { return }
+        // submit 邏輯完全在 ViewModel 內：依賴 AccessRequestServiceProtocol，不依賴 AppState
+        vm.submit(domain: domain, childProfileId: childId, in: modelContext)
     }
 
     // MARK: - Success

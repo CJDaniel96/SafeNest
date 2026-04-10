@@ -111,11 +111,11 @@ struct AccessRequestDetailView: View {
 // 避免裸 AccessRequest() 在沒有 ModelContext 的情況下使用 @Bindable。
 #Preview {
     struct Preview: View {
-        @Query(filter: #Predicate<AccessRequest> { $0.status == .pending })
-        private var requests: [AccessRequest]
+        // SwiftData #Predicate 不支援 Codable enum 比較，全撈後 Swift 端取第一筆 pending
+        @Query private var requests: [AccessRequest]
 
         var body: some View {
-            if let request = requests.first {
+            if let request = requests.first(where: { $0.status == .pending }) {
                 NavigationStack {
                     AccessRequestDetailView(request: request)
                         .environment(AppState())

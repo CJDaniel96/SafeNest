@@ -22,23 +22,45 @@ import SwiftData
 // ⚠️ 規則：
 //   - 所有 INSERT / UPDATE / DELETE 必須透過 AppState 方法執行
 //   - View 不得直接呼叫 modelContext.insert / delete
-//   - ViewModel 不得持有任何可變狀態（@Observable 表單狀態除外）
+//   - ViewModel 不得持有任何可變狀態（@Observable 表單狀態 + service 依賴除外）
+//
+// Service 抽象層（Round 6）：
+//   system-level side-effect 透過 4 個 protocol 解耦，預設使用 Mock 實作。
+//   未來換真實 Apple framework 實作時，只需在 SafeNestApp 替換注入的 service instance。
 
 /// App 全域狀態的唯一協調者。
-/// - 讀取：由各 View 以 @Query 向 ModelContainer 訂閱，結果傳入 ViewModel 計算
-/// - 寫入：所有資料異動集中於此，保持 ModelContainer 為唯一資料來源
 @Observable
 final class AppState {
 
     // MARK: - Role
 
-    /// 目前使用角色（I-5：private(set) 強制外部必須透過 switchRole 切換，保留未來加入 PIN 防護的空間）
     private(set) var currentRole: AppRole = .parent
 
-    /// 切換角色的唯一入口。未來可在此加入 PIN 驗證、日誌等前置邏輯。
     func switchRole(to role: AppRole) {
         guard role != currentRole else { return }
         currentRole = role
+    }
+
+    // MARK: - Service Dependencies（Apple framework 整合抽象層）
+
+    let protectionService:     any ProtectionServiceProtocol
+    let blockingService:       any BlockingServiceProtocol
+    let activityMonitorService: any ActivityMonitorServiceProtocol
+    let accessRequestService:  any AccessRequestServiceProtocol
+
+    /// 所有 service 皆有 mock 預設值，現有呼叫端不需修改。
+    /// 真實整合時，在 SafeNestApp 建立 AppState 時傳入真實 service：
+    ///   `AppState(protectionService: RealProtectionService(), ...)`
+    init(
+        protectionService:      any ProtectionServiceProtocol     = MockProtectionService(),
+        blockingService:        any BlockingServiceProtocol       = MockBlockingService(),
+        activityMonitorService: any ActivityMonitorServiceProtocol = MockActivityMonitorService(),
+        accessRequestService:   any AccessRequestServiceProtocol  = MockAccessRequestService()
+    ) {
+        self.protectionService      = protectionService
+        self.blockingService        = blockingService
+        self.activityMonitorService = activityMonitorService
+        self.accessRequestService   = accessRequestService
     }
 
     // MARK: - Rule Mutations
@@ -47,7 +69,6 @@ final class AppState {
                  childProfileId: String,
                  in context: ModelContext) {
         let trimmed = value.trimmingCharacters(in: .whitespaces)
-        // I-2：防止空 childProfileId 產生孤兒規則
         guard !trimmed.isEmpty, !childProfileId.isEmpty else { return }
         context.insert(Rule(
             childProfileId: childProfileId,
@@ -66,46 +87,68 @@ final class AppState {
         offsets.forEach { context.delete(rules[$0]) }
     }
 
-    /// @Model 是 class，直接 mutate 即可，SwiftData 自動追蹤變動並通知所有 @Query
     func toggleRule(_ rule: Rule) {
         rule.enabled.toggle()
     }
 
-    // MARK: - ChildProfile Mutations
-
-    func toggleProtection(_ child: ChildProfile) {
-        child.protectionEnabled.toggle()
+    /// 規則變更後，呼叫此方法將最新規則集同步至系統層。
+    /// View 層在 addRule / deleteRule / toggleRule 後視情況呼叫。
+    /// Mock 為 no-op；真實 app 推送至 ManagedSettings / NetworkExtension。
+    func syncRules(_ rules: [Rule], for childId: String) {
+        // 同步呼叫：BlockingServiceProtocol 不宣告 async，避免 @Model 跨 actor 邊界的 Sendable 問題
+        blockingService.syncRules(rules, for: childId)
     }
 
-    // MARK: - AccessRequest Mutations
+    // MARK: - ChildProfile Mutations
 
-    /// 孩子送出審核申請
+    /// 切換保護狀態，同時通知 ProtectionService 更新系統層（Mock 為 no-op）。
+    func toggleProtection(_ child: ChildProfile) {
+        child.protectionEnabled.toggle()
+        let childId = child.id
+        let enabled = child.protectionEnabled
+        Task {
+            try? await enabled
+                ? protectionService.enableProtection(for: childId)
+                : protectionService.disableProtection(for: childId)
+        }
+    }
+
+    // MARK: - Activity Monitor
+
+    /// Demo 流程中手動記錄一筆阻擋事件（模擬 DeviceActivity extension 的行為）。
+    /// 真實 app：由 DeviceActivity extension 觸發，View 層不需呼叫此 method。
+    func recordBlockEvent(
+        domain: String,
+        url: String? = nil,
+        category: BlockEventCategory,
+        ruleType: RuleType,
+        childProfileId: String,
+        in context: ModelContext
+    ) {
+        activityMonitorService.logBlockEvent(
+            domain: domain, url: url,
+            category: category, ruleType: ruleType,
+            childProfileId: childProfileId, in: context
+        )
+    }
+
+    // MARK: - AccessRequest Mutations（委派至 AccessRequestService）
+
     func submitAccessRequest(domain: String,
                              childProfileId: String,
                              reason: String,
                              in context: ModelContext) {
-        let trimmed = reason.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty, !childProfileId.isEmpty else { return }
-        context.insert(AccessRequest(
-            childProfileId: childProfileId,
-            domain: domain,
-            reason: trimmed
-        ))
+        accessRequestService.submitAccessRequest(
+            domain: domain, childProfileId: childProfileId,
+            reason: reason, in: context
+        )
     }
 
-    /// 家長核准申請（狀態更新後，所有訂閱 AccessRequest 的 @Query 自動同步）
     func approveRequest(_ request: AccessRequest, note: String) {
-        request.status     = .approved
-        request.reviewedAt = .now
-        let trimmed = note.trimmingCharacters(in: .whitespaces)
-        request.reviewerNote = trimmed.isEmpty ? nil : trimmed
+        accessRequestService.approveRequest(request, note: note)
     }
 
-    /// 家長拒絕申請（狀態更新後，所有訂閱 AccessRequest 的 @Query 自動同步）
     func denyRequest(_ request: AccessRequest, note: String) {
-        request.status     = .denied
-        request.reviewedAt = .now
-        let trimmed = note.trimmingCharacters(in: .whitespaces)
-        request.reviewerNote = trimmed.isEmpty ? nil : trimmed
+        accessRequestService.denyRequest(request, note: note)
     }
 }
